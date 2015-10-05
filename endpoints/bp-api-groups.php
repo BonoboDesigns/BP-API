@@ -79,15 +79,30 @@ class BP_API_Groups extends WP_REST_Controller {
 			while ( bp_groups() ) {
 
 				bp_the_group();
+					ob_start();
+					bp_get_group_avatar('html=false&url=true&type=full');
+					$groAvatar = ob_get_clean();
+					$groDoc = new DOMDocument();
+					$groDoc->loadHTML($groAvatar);
+					$groImageTags = $groDoc->getElementsByTagName('img');
+				    foreach($groImageTags as $grotag) {
+				        $groParsedAvatar = $grotag->getAttribute('src');
+				    }
 
+					if ($groParsedAvatar != null) {
+						$groAvatar = $groParsedAvatar;
+					} else {
+						$groAvatar = $groAvatar;
+					} 
 				$group = array(
-					'abe_avatar' => bp_core_fetch_avatar( array( 'html' => false, 'item_id' => bp_get_group_id() ) ),
-					'abe_permalink' => bp_get_group_permalink(),
-					'abe_name' => bp_get_group_name(),
+					'abe_desc' => bp_get_group_description_excerpt(),
 					'abe_last' => bp_get_group_last_active(),
-					'abe_count' => bp_get_group_member_count(),
+					'abe_permalink' => bp_get_group_permalink(),
 					'abe_type' => bp_get_group_type(),
-					'abe_desc' => bp_get_group_description_excerpt()
+					'excerpt' => bp_get_group_member_count(),
+					'featured_image' => $groAvatar,
+					'ID' => bp_get_group_id(),
+					'title' => bp_get_group_name()
 				);
 
 				$group = apply_filters( 'bp_json_prepare_group', $group );
