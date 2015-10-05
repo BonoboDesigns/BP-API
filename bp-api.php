@@ -144,6 +144,7 @@ if ( !class_exists( 'BuddyPress_API' ) ) :
 			if ( version_compare( BP_VERSION, '2.0', '>' ) ) {
 				include_once( dirname( __FILE__ ) . '/endpoints/bp-api-core.php' );
 				include_once( dirname( __FILE__ ) . '/endpoints/bp-api-activity.php' );
+				include_once( dirname( __FILE__ ) . '/endpoints/bp-api-groups.php' );
 				include_once( dirname( __FILE__ ) . '/endpoints/bp-api-xprofile.php' );
 			}
 
@@ -220,6 +221,9 @@ if ( !class_exists( 'BuddyPress_API' ) ) :
 				$bp_api_activity = new BP_API_Activity;
 				$bp_api_activity->register_routes();
 			}
+
+			$bp_api_groups = new BP_API_Groups;
+			$bp_api_groups->register_routes();
 
 			/*
 			* BP xProfile
