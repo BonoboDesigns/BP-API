@@ -53,11 +53,43 @@ class BP_API_Groups extends WP_REST_Controller {
 	 * @param mixed $request
 	 * @return void
 	 */
-	public function get_item( $filter = array() ) {
+	public function get_item( $request ) {
+		$id = (int) $request['id'];
+		$sing_group = groups_get_group( array( 'group_id' => $id ) );
+		ob_start();
+			bp_core_fetch_avatar('object=group&item_id='.$id);
+			$groPreAvatar = ob_get_clean();
+			$groDoc = new DOMDocument();
+			$groDoc->loadHTML($groAvatar);
+			$groImageTags = $groDoc->getElementsByTagName('img');
+		    foreach($groImageTags as $grotag) {
+		        $groParsedAvatar = $grotag->getAttribute('src');
+		    }
 
-		$response = $this->get_single_group( $filter['filter'] );
+			if ($groParsedAvatar != null) {
+				$groAvatar = $groParsedAvatar;
+			} else {
+				$groAvatar = $groPreAvatar;
+			} 
+		global $groups_template;
+		
+		$group = array(
+			'excerpt_last' => $sing_group->description,
+			// 'abe_last' => $sing_group->id->last_activity,
+			'abe_permalink' => apply_filters( 'bp_get_group_permalink', trailingslashit( bp_get_groups_directory_permalink() . $sing_group->slug . '/' ) ),
+			'abe_type' => $sing_group->status,
+			'excerpt' => bp_get_group_member_count($sing_group),
+			'featured_image' => $groAvatar,
+			'ID' => $sing_group->id,
+			'slug' => $sing_group->slug,
+			'title' => $sing_group->name
+		);
 
-		return $response;
+
+
+		// $response = $this->get_single_group( $id );
+
+		return $group;
 
 	}
 
@@ -130,17 +162,14 @@ class BP_API_Groups extends WP_REST_Controller {
 
 	}
 
-	public function get_single_group( $filter ) {
+	public function get_single_group( $id ) {
+		$sing_group = groups_get_group( array( 'group_id' => $id ) );
+		$slug = $sing_group->slug;
 
-		// $sing_group = groups_get_group( array( 'group_id' => $id ) );
-		// $slug = $sing_group->slug;
-
-		$args = $filter;
-		// $args = array(
-					// 'slug' => $filter['slug'],
-					// 'max' => 1
-		// );
-		// $args = $groupPush;
+		$args = array(
+					'slug' => $slug,
+					'max' => 1
+		);
 
 		if ( bp_has_groups( $args ) ) {
 
@@ -162,7 +191,6 @@ class BP_API_Groups extends WP_REST_Controller {
 					} else {
 						$groAvatar = $groAvatar;
 					}
-					if (bp_get_group_slug() == $filter['slug']) {
 						$group = array(
 							'excerpt_last' => bp_get_group_description_excerpt(),
 							'abe_last' => bp_get_group_last_active(),
@@ -174,7 +202,6 @@ class BP_API_Groups extends WP_REST_Controller {
 							'slug' => bp_get_group_slug(),
 							'title' => bp_get_group_name()
 						);
-					} else {}
 				
 
 				$group = apply_filters( 'bp_json_prepare_group', $group );
@@ -184,7 +211,7 @@ class BP_API_Groups extends WP_REST_Controller {
 			}
 
 			$data = array(
-				'group' => $group
+				'groups' => $group
 			);
 
 			$data = apply_filters( 'bp_json_prepare_groupees', $data );
